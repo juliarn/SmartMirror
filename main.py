@@ -19,10 +19,10 @@ class SmartMirrorApplication(tkinter.Frame):
 
     def create_widgets(self):
         self.time_label = tkinter.Label(font=("Helvetica", 100), background="black", foreground="white")
-        self.time_label.pack(side="top", anchor="e")
+        self.time_label.pack(side="top", anchor="e",padx=5)
 
         self.date_label = tkinter.Label(font=("Helvetica", 25), background="black", foreground="white")
-        self.date_label.pack(side="top", anchor="e")
+        self.date_label.pack(side="top", anchor="e",padx=12.5)
 
     def update(self):
         now = datetime.datetime.now()
