@@ -42,8 +42,9 @@ class WeatherFrame(tkinter.Frame):
     weather_status_label = None
     location_label = None
 
-    def __init__(self, master):
+    def __init__(self, master, weather):
         super().__init__(master, background="black")
+        self.weather = weather
 
         self.create_widgets()
         self.update()
@@ -59,10 +60,11 @@ class WeatherFrame(tkinter.Frame):
         self.location_label.pack(side="top", anchor="w", padx=12.5)
 
     def update(self):
-        # TODO: Get real weather
-        self.temperature_label["text"] = "7°"
-        self.weather_status_label["text"] = "leicht bewölkt"
-        self.location_label["text"] = "Köln, Deutschland"
+        temperature, max_temperature, min_temperature, weather = self.weather.request_weather()
+
+        self.temperature_label["text"] = f"{temperature}°"
+        self.weather_status_label["text"] = weather
+        self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
 
 
 class CoverLessonFrame(tkinter.Frame):
