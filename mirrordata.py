@@ -35,24 +35,27 @@ class Weather:
         self.location_request_url = location_request_url
         self.weather_request_url = weather_request_url
 
-        city, country = self.request_location()
+        city, country_code, country = self.request_location()
 
         self.city = city
+        self.country_code = country_code
         self.country = country
 
     def request_location(self):
         try:
             response = requests.get(self.location_request_url).json()
-            return response.get("city"), response.get("country_name")
+            return response.get("city"), response.get("country_code"), response.get("country")
         except requests.exceptions.RequestException:
             return None
 
     def request_weather(self):
         try:
-            response = requests.get(self.weather_request_url.format(self.city)).json()
-            main_section = response.get("main")
-            weather_section = response.get("weather")
+            response = requests.get(self.weather_request_url.format(f"{self.city},{self.country_code}")).json()
+            result_weather = response.get("list")[0]
 
-            return main_section.get("temp"), main_section.get("temp_max"), main_section.get("temp_min"), weather_section[0].get("main")
+            main_section = result_weather.get("main")
+            weather_condition = result_weather.get("weather")[0].get("description")
+
+            return round(main_section.get("temp")), round(main_section.get("temp_max")), round(main_section.get("temp_min")), weather_condition
         except requests.exceptions.RequestException:
             return None

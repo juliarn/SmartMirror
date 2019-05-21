@@ -13,17 +13,17 @@ WEEKDAYS = {
 # Cover lessons
 
 COVER_LESSONS_HEADER = "Vertretungsplan für heute"
-COVER_LESSONS_HEADER_EMPTY = "Keine Vertretungen gefunden"
+COVER_LESSONS_HEADER_EMPTY = "Heute fällt leider nichts aus :("
 
 LESSON_COVERED = "{}. Stunde {} '{}' vertreten von {}"
 LESSON_FREE = "{}. Stunde {} '{}'{}"
 
-COVER_LESSONS_UUID = "uuid"
+COVER_LESSONS_UUID = "UUID"
 COVER_LESSONS_URL = f"url/{COVER_LESSONS_UUID}.json"
 
 # Weather
 
-LOCATION_REQUEST_URL = "https://ipapi.co/json"
+LOCATION_REQUEST_URL = "http://free.ipwhois.io/json/?lang=de"
 
-WEATHER_REQUEST_KEY = "API_KEY"
-WEATHER_REQUEST_URL = "https://api.openweathermap.org/data/2.5/find?q={}&units=metric&appid=" + WEATHER_REQUEST_KEY
+WEATHER_REQUEST_KEY = "REQUEST_KEY"
+WEATHER_REQUEST_URL = "https://api.openweathermap.org/data/2.5/find?q={}&units=metric&lang=de&appid=" + WEATHER_REQUEST_KEY

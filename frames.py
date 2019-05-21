@@ -22,7 +22,7 @@ class TimeFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.time_label = MirrorLabel(self, 100)
+        self.time_label = MirrorLabel(self, 105)
         self.time_label.pack(side="top", anchor="e", padx=5)
 
         self.date_label = MirrorLabel(self, 25)
@@ -53,18 +53,20 @@ class WeatherFrame(tkinter.Frame):
         self.temperature_label = MirrorLabel(self, 80)
         self.temperature_label.pack(side="top", anchor="w", padx=5)
 
-        self.weather_status_label = MirrorLabel(self, 30)
+        self.weather_status_label = MirrorLabel(self, 25)
         self.weather_status_label.pack(side="top", anchor="w", padx=12.5)
 
-        self.location_label = MirrorLabel(self, 15)
+        self.location_label = MirrorLabel(self, 16)
         self.location_label.pack(side="top", anchor="w", padx=12.5)
 
     def update(self):
-        temperature, max_temperature, min_temperature, weather = self.weather.request_weather()
+        temperature, max_temperature, min_temperature, weather_condition = self.weather.request_weather()
 
         self.temperature_label["text"] = f"{temperature}°"
-        self.weather_status_label["text"] = weather
+        self.weather_status_label["text"] = f"{weather_condition} ({max_temperature}°/{min_temperature}°)"
         self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
+
+        self.temperature_label.after(1000 * 60 * 15, self.update)
 
 
 class CoverLessonFrame(tkinter.Frame):
@@ -79,7 +81,7 @@ class CoverLessonFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.head_label = MirrorLabel(self, 25)
+        self.head_label = MirrorLabel(self, 20)
         self.head_label.pack(side="top", anchor="w", padx=12.5, pady=4)
 
     def update(self):
