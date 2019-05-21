@@ -24,7 +24,6 @@ class CoverLessons:
             return []
 
     def get_from_today(self, cover_lessons):
-        print(datetime.datetime.today())
         from_today = filter(lambda cover_lesson: self.parse_time(cover_lesson.get("date")) == datetime.date.today(), cover_lessons)
         return sorted(from_today, key=lambda cover_lesson: cover_lesson.get("period"))
 
@@ -35,22 +34,18 @@ class Weather:
         self.location_request_url = location_request_url
         self.weather_request_url = weather_request_url
 
-        city, country_code, country = self.request_location()
-
-        self.city = city
-        self.country_code = country_code
-        self.country = country
+        self.city, self.country, self.latitude, self.longitude = self.request_location()
 
     def request_location(self):
         try:
             response = requests.get(self.location_request_url).json()
-            return response.get("city"), response.get("country_code"), response.get("country")
+            return response.get("city"), response.get("country"), response.get("latitude"), response.get("longitude")
         except requests.exceptions.RequestException:
             return None
 
     def request_weather(self):
         try:
-            response = requests.get(self.weather_request_url.format(f"{self.city},{self.country_code}")).json()
+            response = requests.get(self.weather_request_url.format(self.latitude, self.longitude)).json()
             result_weather = response.get("list")[0]
 
             main_section = result_weather.get("main")

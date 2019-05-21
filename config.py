@@ -26,4 +26,4 @@ COVER_LESSONS_URL = f"url/{COVER_LESSONS_UUID}.json"
 LOCATION_REQUEST_URL = "http://free.ipwhois.io/json/?lang=de"
 
 WEATHER_REQUEST_KEY = "REQUEST_KEY"
-WEATHER_REQUEST_URL = "https://api.openweathermap.org/data/2.5/find?q={}&units=metric&lang=de&appid=" + WEATHER_REQUEST_KEY
+WEATHER_REQUEST_URL = "https://api.openweathermap.org/data/2.5/find?lat={}&lon={}&cnt=1&units=metric&lang=de&appid=" + WEATHER_REQUEST_KEY
