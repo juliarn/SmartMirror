@@ -1,5 +1,7 @@
 import requests
 import datetime
+import wifi
+import json
 
 
 class CoverLessons:
@@ -30,16 +32,30 @@ class CoverLessons:
 
 class Weather:
 
-    def __init__(self, location_request_url, weather_request_url):
+    def __init__(self, location_request_url, location_request_token, wifi_addresses, weather_request_url):
         self.location_request_url = location_request_url
+        self.location_request_token = location_request_token
+        self.wifi_addresses = wifi_addresses
+
         self.weather_request_url = weather_request_url
 
         self.city, self.country, self.latitude, self.longitude = self.request_location()
 
     def request_location(self):
+        wifi_addresses = wifi.Cell.all("wlan0").keys() if not self.wifi_addresses else self.wifi_addresses
+
+        data = {
+            "token": self.location_request_token,
+            "wifi": list(map(lambda address: {"bssid": address}, wifi_addresses)),
+            "accept-language": "de",
+            "address": 2
+        }
+
         try:
-            response = requests.get(self.location_request_url).json()
-            return response.get("city"), response.get("country"), response.get("latitude"), response.get("longitude")
+            response = requests.post(self.location_request_url, data=json.dumps(data)).json()
+            address_info = response.get("address_detail")
+
+            return address_info.get("city"), address_info.get("country"), response.get("lat"), response.get("lon")
         except requests.exceptions.RequestException:
             return None
 
@@ -51,6 +67,6 @@ class Weather:
             main_section = result_weather.get("main")
             weather_condition = result_weather.get("weather")[0].get("description")
 
-            return round(main_section.get("temp")), round(main_section.get("temp_max")), round(main_section.get("temp_min")), weather_condition
+            return round(main_section.get("temp")), weather_condition
         except requests.exceptions.RequestException:
             return None

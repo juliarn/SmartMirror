@@ -54,16 +54,16 @@ class WeatherFrame(tkinter.Frame):
         self.temperature_label.pack(side="top", anchor="w", padx=5)
 
         self.weather_status_label = MirrorLabel(self, 25)
-        self.weather_status_label.pack(side="top", anchor="w", padx=12.5)
+        self.weather_status_label.pack(side="top", anchor="w", padx=20)
 
         self.location_label = MirrorLabel(self, 16)
-        self.location_label.pack(side="top", anchor="w", padx=12.5)
+        self.location_label.pack(side="top", anchor="w", padx=20)
 
     def update(self):
-        temperature, max_temperature, min_temperature, weather_condition = self.weather.request_weather()
+        temperature, weather_condition = self.weather.request_weather()
 
         self.temperature_label["text"] = f"{temperature}°"
-        self.weather_status_label["text"] = f"{weather_condition} ({max_temperature}°/{min_temperature}°)"
+        self.weather_status_label["text"] = weather_condition
         self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
 
         self.temperature_label.after(1000 * 60 * 15, self.update)
