@@ -42,7 +42,7 @@ class Weather:
         self.city, self.country, self.latitude, self.longitude = self.request_location()
 
     def request_location(self):
-        wifi_addresses = wifi.Cell.all("wlan0").keys() if not self.wifi_addresses else self.wifi_addresses
+        wifi_addresses = list(map(lambda cell: cell.address, wifi.Cell.all("wlan0"))) if not self.wifi_addresses else self.wifi_addresses
 
         data = {
             "token": self.location_request_token,
