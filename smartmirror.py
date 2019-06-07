@@ -10,7 +10,7 @@ class SmartMirrorApplication(tkinter.Tk):
     def __init__(self):
         super().__init__()
         self.attributes("-fullscreen", True)
-        self.configure(background="black")
+        self.configure(background="black", cursor="none")
 
         self.create_top_frame()
         self.create_bottom_frame()
