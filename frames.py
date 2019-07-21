@@ -1,7 +1,9 @@
-import tkinter
 import datetime
+import tkinter
 
 import config
+
+SIDE_PADDING = 50
 
 
 class MirrorLabel(tkinter.Label):
@@ -22,11 +24,11 @@ class TimeFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.time_label = MirrorLabel(self, 105)
-        self.time_label.pack(side="top", anchor="e", padx=5)
+        self.time_label = MirrorLabel(self, 95)
+        self.time_label.pack(side="top", anchor="e", padx=SIDE_PADDING, pady=(SIDE_PADDING, 0))
 
         self.date_label = MirrorLabel(self, 25)
-        self.date_label.pack(side="top", anchor="e", padx=12.5)
+        self.date_label.pack(side="top", anchor="e", padx=SIDE_PADDING)
 
     def update(self):
         now = datetime.datetime.now()
@@ -50,14 +52,14 @@ class WeatherFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.temperature_label = MirrorLabel(self, 80)
-        self.temperature_label.pack(side="top", anchor="w", padx=5)
+        self.temperature_label = MirrorLabel(self, 70)
+        self.temperature_label.pack(side="top", anchor="w", padx=SIDE_PADDING, pady=(SIDE_PADDING, 0))
 
         self.weather_status_label = MirrorLabel(self, 25)
-        self.weather_status_label.pack(side="top", anchor="w", padx=20)
+        self.weather_status_label.pack(side="top", anchor="w", padx=SIDE_PADDING)
 
         self.location_label = MirrorLabel(self, 16)
-        self.location_label.pack(side="top", anchor="w", padx=20)
+        self.location_label.pack(side="top", anchor="w", padx=SIDE_PADDING)
 
     def update(self):
         temperature, weather_condition = self.weather.request_weather()
@@ -67,6 +69,30 @@ class WeatherFrame(tkinter.Frame):
         self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
 
         self.temperature_label.after(1000 * 60 * 15, self.update)
+
+
+class SpotifyFrame(tkinter.Frame):
+    song_label = None
+    artist_label = None
+
+    def __init__(self, master, spotify):
+        super().__init__(master, background="black")
+        self.spotify = spotify
+
+        self.create_widgets()
+        self.update()
+
+    def create_widgets(self):
+        self.song_label = MirrorLabel(self, 18)
+        self.song_label.pack(side="top", anchor="e", padx=SIDE_PADDING)
+
+        self.artist_label = MirrorLabel(self, 12)
+        self.artist_label.pack(side="top", anchor="e", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
+
+    def update(self):
+        self.song_label["text"], self.artist_label["text"] = self.spotify.request_current_song()
+
+        self.song_label.after(1000 * 3, self.update)
 
 
 class CoverLessonFrame(tkinter.Frame):
@@ -82,7 +108,7 @@ class CoverLessonFrame(tkinter.Frame):
 
     def create_widgets(self):
         self.head_label = MirrorLabel(self, 20)
-        self.head_label.pack(side="top", anchor="w", padx=12.5, pady=4)
+        self.head_label.pack(side="top", anchor="w", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
 
     def update(self):
         self.cover_lessons.update()
@@ -95,7 +121,7 @@ class CoverLessonFrame(tkinter.Frame):
 
         for cover_lesson in self.cover_lessons.cover_lessons:
             lesson_label = MirrorLabel(self, 15)
-            lesson_label.pack(side="top", anchor="w", padx=30)
+            lesson_label.pack(side="top", anchor="w", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
 
             self.lesson_labels.append(lesson_label)
 

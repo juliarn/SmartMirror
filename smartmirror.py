@@ -29,6 +29,7 @@ class SmartMirrorApplication(tkinter.Tk):
         bottom_frame.pack(side="bottom", fill="both", expand="yes", pady=15)
 
         frames.CoverLessonFrame(bottom_frame, mirrordata.CoverLessons(config.COVER_LESSONS_URL)).pack(side="left", anchor="s")
+        frames.SpotifyFrame(bottom_frame, mirrordata.Spotify(config.SPOTIFY_APP_ID, config.SPOTIFY_APP_SECRET, config.SPOTIFY_REFRESH_TOKEN)).pack(side="right", anchor="s")
 
 
 app = SmartMirrorApplication()

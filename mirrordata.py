@@ -1,33 +1,10 @@
-import requests
 import datetime
-import wifi
 import json
+import time
 
-
-class CoverLessons:
-    cover_lessons = None
-
-    @staticmethod
-    def parse_time(date_string):
-        return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
-
-    def __init__(self, request_url):
-        self.request_url = request_url
-
-    def update(self):
-        cover_lessons = self.request_cover_lessons()
-
-        self.cover_lessons = self.get_from_today(cover_lessons)
-
-    def request_cover_lessons(self):
-        try:
-            return requests.get(self.request_url).json().get("coverLessons")
-        except requests.exceptions.RequestException:
-            return []
-
-    def get_from_today(self, cover_lessons):
-        from_today = filter(lambda cover_lesson: self.parse_time(cover_lesson.get("date")) == datetime.date.today(), cover_lessons)
-        return sorted(from_today, key=lambda cover_lesson: cover_lesson.get("period"))
+import requests
+import wifi
+from flask import Flask, redirect, request
 
 
 class Weather:
@@ -70,3 +47,108 @@ class Weather:
             return round(main_section.get("temp")), weather_condition
         except requests.exceptions.RequestException:
             return None
+
+
+class Spotify:
+    flask_port = 8888
+
+    @staticmethod
+    def current_millis():
+        return int(round(time.time() * 1000))
+
+    def __init__(self, app_id, app_secret, refresh_token):
+        self.app_id = app_id
+        self.app_secret = app_secret
+        self.refresh_token = refresh_token
+
+        flask_app = Flask(__name__)
+
+        @flask_app.route("/", methods=["GET"])
+        def spotify_login():
+            return redirect("https://accounts.spotify.com/authorize"
+                            "?client_id={}"
+                            "&response_type=code"
+                            "&redirect_uri=http%3A%2F%2F127.0.0.1:{}%2Fcallback"
+                            "&scope=user-read-currently-playing"
+                            .format(self.app_id, self.flask_port))
+
+        @flask_app.route("/callback")
+        def login_callback():
+            if "code" in request.args:
+                code = request.args.get("code")
+                self.auth_token, self.refresh_token = self.request_token(code)
+                return f"Auth-Token: {self.auth_token} <br/> Refresh-Token: {self.refresh_token}"
+            return "Failed to auth!"
+
+        if not refresh_token:
+            flask_app.run(port=self.flask_port)
+        else:
+            self.auth_token, self.expire_millis = self.request_fresh_token(refresh_token)
+
+    def request_token(self, auth_code):
+        response = requests.post("https://accounts.spotify.com/api/token", data={
+            "grant_type": "authorization_code",
+            "code": auth_code,
+            "redirect_uri": "http://127.0.0.1:{}/callback".format(self.flask_port),
+            "client_id": self.app_id,
+            "client_secret": self.app_secret
+        })
+        return response.json().get("access_token"), response.json().get("refresh_token")
+
+    def request_fresh_token(self, refresh_token):
+        response = requests.post("https://accounts.spotify.com/api/token", data={
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": self.app_id,
+            "client_secret": self.app_secret
+        })
+        return response.json().get("access_token"), (response.json().get("expires_in") * 1000) + self.current_millis()
+
+    def request_current_song(self):
+        if self.current_millis() >= self.expire_millis:
+            self.auth_token, self.expire_millis = self.request_fresh_token(self.refresh_token)
+
+        headers = {
+            "Authorization": f"Bearer {self.auth_token}"
+        }
+        response = requests.get("https://api.spotify.com/v1/me/player/currently-playing", headers=headers)
+
+        is_playing = True if response.content else False
+
+        if is_playing:
+            item = response.json().get("item")
+
+            if not item:
+                return "", ""
+
+            song_name = item.get("name")
+            artists = [artist.get("name") for artist in item.get("artists")]
+
+            return song_name, ", ".join(artists)
+        return "", ""
+
+
+class CoverLessons:
+    cover_lessons = None
+
+    @staticmethod
+    def parse_time(date_string):
+        return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+
+    def __init__(self, request_url):
+        self.request_url = request_url
+
+    def update(self):
+        cover_lessons = self.request_cover_lessons()
+
+        self.cover_lessons = self.get_from_today(cover_lessons)
+
+    def request_cover_lessons(self):
+        try:
+            return requests.get(self.request_url).json().get("coverLessons")
+        except requests.exceptions.RequestException:
+            return []
+
+    def get_from_today(self, cover_lessons):
+        from_today = filter(lambda cover_lesson: self.parse_time(cover_lesson.get("date")) == datetime.date.today(), cover_lessons)
+        return sorted(from_today, key=lambda cover_lesson: cover_lesson.get("period"))
