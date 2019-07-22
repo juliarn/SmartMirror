@@ -2,6 +2,8 @@ import datetime
 import json
 import time
 
+import cv2
+import numpy
 import requests
 import wifi
 from flask import Flask, redirect, request
@@ -55,6 +57,13 @@ class Spotify:
     @staticmethod
     def current_millis():
         return int(round(time.time() * 1000))
+
+    @staticmethod
+    def parse_image(url, image_size):
+        response = requests.get(url)
+        image = numpy.asarray(bytearray(response.content), dtype="uint8")
+        image = cv2.cvtColor(cv2.imdecode(image, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
+        return cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
 
     def __init__(self, app_id, app_secret, refresh_token):
         self.app_id = app_id
@@ -119,13 +128,14 @@ class Spotify:
             item = response.json().get("item")
 
             if not item:
-                return "", ""
+                return "", "", ""
 
             song_name = item.get("name")
             artists = [artist.get("name") for artist in item.get("artists")]
+            cover_image_url = item.get("album").get("images")[0].get("url")
 
-            return song_name, ", ".join(artists)
-        return "", ""
+            return song_name, ", ".join(artists), cover_image_url
+        return "", "", ""
 
 
 class CoverLessons:

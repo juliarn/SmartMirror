@@ -28,7 +28,7 @@ SPOTIFY_REFRESH_TOKEN = ""
 # Cover lessons
 
 COVER_LESSONS_HEADER = "Vertretungsplan für heute"
-COVER_LESSONS_HEADER_EMPTY = "Heute fällt leider nichts aus :("
+COVER_LESSONS_HEADER_EMPTY = ""
 
 LESSON_COVERED = "{}. Stunde {} '{}' vertreten von {}"
 LESSON_FREE = "{}. Stunde {} '{}'{}"

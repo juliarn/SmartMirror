@@ -1,6 +1,8 @@
 import datetime
 import tkinter
 
+from PIL import ImageTk, Image
+
 import config
 
 SIDE_PADDING = 50
@@ -74,15 +76,20 @@ class WeatherFrame(tkinter.Frame):
 class SpotifyFrame(tkinter.Frame):
     song_label = None
     artist_label = None
+    cover_canvas = None
 
-    def __init__(self, master, spotify):
+    def __init__(self, master, spotify, cover_image_size):
         super().__init__(master, background="black")
         self.spotify = spotify
+        self.cover_image_size = cover_image_size
 
         self.create_widgets()
         self.update()
 
     def create_widgets(self):
+        self.cover_canvas = tkinter.Canvas(self, background="black", highlightthickness=0, width=self.cover_image_size, height=self.cover_image_size)
+        self.cover_canvas.pack(side="top", anchor="e", padx=SIDE_PADDING, pady=(0, 10))
+
         self.song_label = MirrorLabel(self, 18)
         self.song_label.pack(side="top", anchor="e", padx=SIDE_PADDING)
 
@@ -90,9 +97,17 @@ class SpotifyFrame(tkinter.Frame):
         self.artist_label.pack(side="top", anchor="e", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
 
     def update(self):
-        self.song_label["text"], self.artist_label["text"] = self.spotify.request_current_song()
+        self.song_label["text"], self.artist_label["text"], cover_image_url = self.spotify.request_current_song()
 
-        self.song_label.after(1000 * 3, self.update)
+        if cover_image_url:
+            image = ImageTk.PhotoImage(image=Image.fromarray(self.spotify.parse_image(cover_image_url, self.cover_image_size)))
+
+            self.cover_canvas.image = image
+            self.cover_canvas.create_image(0, 0, image=image, anchor="nw")
+        else:
+            self.cover_canvas.delete("all")
+
+        self.song_label.after(1000, self.update)
 
 
 class CoverLessonFrame(tkinter.Frame):
@@ -107,7 +122,7 @@ class CoverLessonFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.head_label = MirrorLabel(self, 20)
+        self.head_label = MirrorLabel(self, 18)
         self.head_label.pack(side="top", anchor="w", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
 
     def update(self):
@@ -120,7 +135,7 @@ class CoverLessonFrame(tkinter.Frame):
             lesson_label.destroy()
 
         for cover_lesson in self.cover_lessons.cover_lessons:
-            lesson_label = MirrorLabel(self, 15)
+            lesson_label = MirrorLabel(self, 13)
             lesson_label.pack(side="top", anchor="w", padx=SIDE_PADDING, pady=(0, SIDE_PADDING))
 
             self.lesson_labels.append(lesson_label)
