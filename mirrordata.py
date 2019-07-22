@@ -21,11 +21,11 @@ class Weather:
         self.city, self.country, self.latitude, self.longitude = self.request_location()
 
     def request_location(self):
-        wifi_addresses = list(map(lambda cell: cell.address, wifi.Cell.all("wlan0"))) if not self.wifi_addresses else self.wifi_addresses
+        wifi_addresses = [cell.address for cell in wifi.Cell.all("wlan0")] if not self.wifi_addresses else self.wifi_addresses
 
         data = {
             "token": self.location_request_token,
-            "wifi": list(map(lambda address: {"bssid": address}, wifi_addresses)),
+            "wifi": [{"bssid": address} for address in wifi_addresses],
             "accept-language": "de",
             "address": 2
         }
@@ -81,7 +81,7 @@ class Spotify:
                             "&scope=user-read-currently-playing"
                             .format(self.app_id, self.flask_port))
 
-        @flask_app.route("/callback")
+        @flask_app.route("/callback", methods=["GET"])
         def login_callback():
             if "code" in request.args:
                 code = request.args.get("code")
@@ -117,18 +117,14 @@ class Spotify:
         if self.current_millis() >= self.expire_millis:
             self.auth_token, self.expire_millis = self.request_fresh_token(self.refresh_token)
 
-        headers = {
+        response = requests.get("https://api.spotify.com/v1/me/player/currently-playing", headers={
             "Authorization": f"Bearer {self.auth_token}"
-        }
-        response = requests.get("https://api.spotify.com/v1/me/player/currently-playing", headers=headers)
+        })
 
         is_playing = True if response.content else False
 
-        if is_playing:
+        if is_playing and response.json().get("item"):
             item = response.json().get("item")
-
-            if not item:
-                return "", "", ""
 
             song_name = item.get("name")
             artists = [artist.get("name") for artist in item.get("artists")]
