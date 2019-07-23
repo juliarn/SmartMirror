@@ -1,3 +1,5 @@
+SIDE_PADDING = 60
+
 # Time
 
 WEEKDAYS = {
@@ -24,6 +26,9 @@ WEATHER_REQUEST_URL = "https://api.openweathermap.org/data/2.5/find?lat={}&lon={
 SPOTIFY_APP_ID = ""
 SPOTIFY_APP_SECRET = ""
 SPOTIFY_REFRESH_TOKEN = ""
+
+SPOTIFY_DEVICE_LABEL = "Musik auf {}"
+SPOTIFY_COVER_SIZE = 128
 
 # Cover lessons
 

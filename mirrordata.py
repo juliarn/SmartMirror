@@ -78,7 +78,7 @@ class Spotify:
                             "?client_id={}"
                             "&response_type=code"
                             "&redirect_uri=http%3A%2F%2F127.0.0.1:{}%2Fcallback"
-                            "&scope=user-read-currently-playing"
+                            "&scope=user-read-currently-playing%20user-read-playback-state"
                             .format(self.app_id, self.flask_port))
 
         @flask_app.route("/callback", methods=["GET"])
@@ -113,17 +113,32 @@ class Spotify:
         })
         return response.json().get("access_token"), (response.json().get("expires_in") * 1000) + self.current_millis()
 
-    def request_current_song(self):
+    def auth_headers(self):
         if self.current_millis() >= self.expire_millis:
             self.auth_token, self.expire_millis = self.request_fresh_token(self.refresh_token)
 
-        response = requests.get("https://api.spotify.com/v1/me/player/currently-playing", headers={
+        return {
             "Authorization": f"Bearer {self.auth_token}"
-        })
+        }
+
+    def request_current_device(self):
+        response = requests.get("https://api.spotify.com/v1/me/player/devices", headers=self.auth_headers())
+
+        if response.status_code == 200:
+            devices = response.json().get("devices")
+
+            for device in devices:
+                if device.get("is_active"):
+                    return device.get("name")
+
+        return None
+
+    def request_current_song(self):
+        response = requests.get("https://api.spotify.com/v1/me/player/currently-playing", headers=self.auth_headers())
 
         is_playing = True if response.content else False
 
-        if is_playing and response.json().get("item"):
+        if response.status_code == 200 and is_playing and response.json().get("item"):
             item = response.json().get("item")
 
             song_name = item.get("name")
