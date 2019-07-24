@@ -2,23 +2,24 @@ import datetime
 import json
 import time
 
-import cv2
-import numpy
 import requests
 import wifi
 from flask import Flask, redirect, request
 
 
 class Weather:
+    city = None
 
-    def __init__(self, location_request_url, location_request_token, wifi_addresses, weather_request_url):
-        self.location_request_url = location_request_url
+    def __init__(self, language, temp_unit, location_request_token, wifi_addresses, weather_request_token):
+        self.language = language
+        self.temp_unit = temp_unit
+
         self.location_request_token = location_request_token
         self.wifi_addresses = wifi_addresses
 
-        self.weather_request_url = weather_request_url
+        self.weather_request_token = weather_request_token
 
-        self.city, self.country, self.latitude, self.longitude = self.request_location()
+        self.country, self.latitude, self.longitude = self.request_location()
 
     def request_location(self):
         wifi_addresses = [cell.address for cell in wifi.Cell.all("wlan0")] if not self.wifi_addresses else self.wifi_addresses
@@ -26,27 +27,32 @@ class Weather:
         data = {
             "token": self.location_request_token,
             "wifi": [{"bssid": address} for address in wifi_addresses],
-            "accept-language": "de",
+            "accept-language": self.language,
             "address": 2
         }
 
         try:
-            response = requests.post(self.location_request_url, data=json.dumps(data)).json()
+            response = requests.post("https://eu1.unwiredlabs.com/v2/process.php", data=json.dumps(data)).json()
             address_info = response.get("address_detail")
 
-            return address_info.get("city"), address_info.get("country"), response.get("lat"), response.get("lon")
+            return address_info.get("country"), response.get("lat"), response.get("lon")
         except requests.exceptions.RequestException:
             return None
 
     def request_weather(self):
         try:
-            response = requests.get(self.weather_request_url.format(self.latitude, self.longitude)).json()
+            response = requests.get("https://api.openweathermap.org/data/2.5/find?lat={}&lon={}&cnt=1&units={}&lang={}&appid={}"
+                                    .format(self.latitude, self.longitude, self.temp_unit, self.language, self.weather_request_token)).json()
             result_weather = response.get("list")[0]
 
-            main_section = result_weather.get("main")
-            weather_condition = result_weather.get("weather")[0].get("description")
+            self.city = result_weather.get("name")
 
-            return round(main_section.get("temp")), weather_condition
+            main_section = result_weather.get("main")
+            weather_section = result_weather.get("weather")[0]
+
+            icon_url = "http://openweathermap.org/img/wn/{}@2x.png".format(weather_section.get("icon"))
+
+            return round(main_section.get("temp")), weather_section.get("description"), icon_url
         except requests.exceptions.RequestException:
             return None
 
@@ -57,13 +63,6 @@ class Spotify:
     @staticmethod
     def current_millis():
         return int(round(time.time() * 1000))
-
-    @staticmethod
-    def parse_image(url, image_size):
-        response = requests.get(url)
-        image = numpy.asarray(bytearray(response.content), dtype="uint8")
-        image = cv2.cvtColor(cv2.imdecode(image, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
-        return cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
 
     def __init__(self, app_id, app_secret, refresh_token):
         self.app_id = app_id
@@ -127,9 +126,7 @@ class Spotify:
         if response.status_code == 200:
             devices = response.json().get("devices")
 
-            for device in devices:
-                if device.get("is_active"):
-                    return device.get("name")
+            return next(filter(lambda device: device.get("is_active"), devices), {}).get("name")
 
         return None
 

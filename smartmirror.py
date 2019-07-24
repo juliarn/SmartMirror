@@ -21,7 +21,7 @@ class SmartMirrorApplication(tkinter.Tk):
 
         frames.TimeFrame(top_frame, config.WEEKDAYS).pack(side="right", anchor="n")
 
-        weather = mirrordata.Weather(config.LOCATION_REQUEST_URL, config.LOCATION_REQUEST_TOKEN, config.WIFI_ADDRESSES, config.WEATHER_REQUEST_URL)
+        weather = mirrordata.Weather(config.LANGUAGE, config.TEMP_UNIT, config.LOCATION_REQUEST_TOKEN, config.WIFI_ADDRESSES, config.WEATHER_REQUEST_TOKEN)
         frames.WeatherFrame(top_frame, weather).pack(side="left", anchor="n")
 
     def create_bottom_frame(self):

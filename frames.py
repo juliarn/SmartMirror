@@ -1,6 +1,10 @@
 import datetime
 import tkinter
+from io import BytesIO
 
+import cv2
+import numpy
+import requests
 from PIL import ImageTk, Image
 
 import config
@@ -10,6 +14,32 @@ class MirrorLabel(tkinter.Label):
 
     def __init__(self, master, font_size, font_color="white"):
         super().__init__(master, font=("Helvetica", font_size), background="black", foreground=font_color)
+
+
+class MirrorImage(tkinter.Canvas):
+    image = None
+
+    def __init__(self, master, size):
+        super().__init__(master, background="black", highlightthickness=0, width=size, height=size)
+        self.size = size
+
+    def parse_image(self, url, resize):
+        response = requests.get(url)
+        image_data = bytearray(response.content)
+
+        if resize:
+            image = numpy.asarray(image_data, dtype="uint8")
+            image = cv2.cvtColor(cv2.imdecode(image, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
+            return Image.fromarray(cv2.resize(image, (self.size, self.size), interpolation=cv2.INTER_CUBIC))
+
+        return Image.open(BytesIO(image_data))
+
+    def set_url(self, url, resize=False):
+        if url:
+            self.image = ImageTk.PhotoImage(image=self.parse_image(url, resize))
+            self.create_image(0, 0, image=self.image, anchor="nw")
+        else:
+            self.delete("all")
 
 
 class TimeFrame(tkinter.Frame):
@@ -41,6 +71,7 @@ class TimeFrame(tkinter.Frame):
 
 class WeatherFrame(tkinter.Frame):
     temperature_label = None
+    weather_status_image = None
     weather_status_label = None
     location_label = None
 
@@ -52,8 +83,14 @@ class WeatherFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.temperature_label = MirrorLabel(self, 70)
-        self.temperature_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING, pady=(config.SIDE_PADDING, 0))
+        temperature_frame = tkinter.Frame(self, background="black")
+        temperature_frame.pack(side="top", fill="both", expand="yes", padx=config.SIDE_PADDING, pady=(config.SIDE_PADDING, 0))
+
+        self.temperature_label = MirrorLabel(temperature_frame, 70)
+        self.temperature_label.pack(side="left", anchor="n")
+
+        self.weather_status_image = MirrorImage(temperature_frame, 100)
+        self.weather_status_image.pack(side="right", anchor="n")
 
         self.weather_status_label = MirrorLabel(self, 25)
         self.weather_status_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING)
@@ -62,20 +99,21 @@ class WeatherFrame(tkinter.Frame):
         self.location_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING)
 
     def update(self):
-        temperature, weather_condition = self.weather.request_weather()
+        temperature, self.weather_status_label["text"], icon_url = self.weather.request_weather()
 
         self.temperature_label["text"] = f"{temperature}°"
-        self.weather_status_label["text"] = weather_condition
+        self.weather_status_image.set_url(icon_url)
+
         self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
 
-        self.temperature_label.after(1000 * 60 * 15, self.update)
+        self.temperature_label.after(1000 * 60 * 10, self.update)
 
 
 class SpotifyFrame(tkinter.Frame):
     device_label = None
     song_label = None
     artist_label = None
-    cover_canvas = None
+    cover_image = None
 
     def __init__(self, master, spotify):
         super().__init__(master, background="black")
@@ -88,8 +126,8 @@ class SpotifyFrame(tkinter.Frame):
         self.device_label = MirrorLabel(self, 12, font_color="grey")
         self.device_label.pack(side="top", anchor="e", padx=config.SIDE_PADDING, pady=(0, 10))
 
-        self.cover_canvas = tkinter.Canvas(self, background="black", highlightthickness=0, width=config.SPOTIFY_COVER_SIZE, height=config.SPOTIFY_COVER_SIZE)
-        self.cover_canvas.pack(side="top", anchor="e", padx=config.SIDE_PADDING, pady=(0, 10))
+        self.cover_image = MirrorImage(self, size=config.SPOTIFY_COVER_SIZE)
+        self.cover_image.pack(side="top", anchor="e", padx=config.SIDE_PADDING, pady=(0, 10))
 
         self.song_label = MirrorLabel(self, 18)
         self.song_label.pack(side="top", anchor="e", padx=config.SIDE_PADDING)
@@ -102,14 +140,7 @@ class SpotifyFrame(tkinter.Frame):
         self.device_label["text"] = config.SPOTIFY_DEVICE_LABEL.format(current_device) if current_device else ""
 
         self.song_label["text"], self.artist_label["text"], cover_image_url = self.spotify.request_current_song()
-
-        if cover_image_url:
-            image = ImageTk.PhotoImage(image=Image.fromarray(self.spotify.parse_image(cover_image_url, config.SPOTIFY_COVER_SIZE)))
-
-            self.cover_canvas.image = image
-            self.cover_canvas.create_image(0, 0, image=image, anchor="nw")
-        else:
-            self.cover_canvas.delete("all")
+        self.cover_image.set_url(cover_image_url, resize=True)
 
         self.song_label.after(1000, self.update)
 
