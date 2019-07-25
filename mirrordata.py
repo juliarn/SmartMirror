@@ -1,8 +1,11 @@
 import datetime
 import json
 import time
+from io import BytesIO
 
+import matplotlib.pyplot as pyplot
 import requests
+import seaborn
 import wifi
 from flask import Flask, redirect, request
 
@@ -31,30 +34,55 @@ class Weather:
             "address": 2
         }
 
-        try:
-            response = requests.post("https://eu1.unwiredlabs.com/v2/process.php", data=json.dumps(data)).json()
-            address_info = response.get("address_detail")
+        response = requests.post("https://eu1.unwiredlabs.com/v2/process.php", data=json.dumps(data)).json()
+        address_info = response.get("address_detail")
 
-            return address_info.get("country"), response.get("lat"), response.get("lon")
-        except requests.exceptions.RequestException:
-            return None
+        return address_info.get("country"), response.get("lat"), response.get("lon")
 
     def request_weather(self):
-        try:
-            response = requests.get("https://api.openweathermap.org/data/2.5/find?lat={}&lon={}&cnt=1&units={}&lang={}&appid={}"
-                                    .format(self.latitude, self.longitude, self.temp_unit, self.language, self.weather_request_token)).json()
-            result_weather = response.get("list")[0]
+        response = requests.get("https://api.openweathermap.org/data/2.5/find?lat={}&lon={}&cnt=1&units={}&lang={}&appid={}"
+                                .format(self.latitude, self.longitude, self.temp_unit, self.language, self.weather_request_token)).json()
+        result_weather = response.get("list")[0]
 
-            self.city = result_weather.get("name")
+        self.city = result_weather.get("name")
 
-            main_section = result_weather.get("main")
-            weather_section = result_weather.get("weather")[0]
+        main_section = result_weather.get("main")
+        weather_section = result_weather.get("weather")[0]
 
-            icon_url = "http://openweathermap.org/img/wn/{}@2x.png".format(weather_section.get("icon"))
+        icon_url = "http://openweathermap.org/img/wn/{}@2x.png".format(weather_section.get("icon"))
 
-            return round(main_section.get("temp")), weather_section.get("description"), icon_url
-        except requests.exceptions.RequestException:
-            return None
+        return round(main_section.get("temp")), weather_section.get("description"), icon_url
+
+    def request_forecast(self):
+        response = requests.get("https://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&cnt=6&units={}&lang={}&appid={}"
+                                .format(self.latitude, self.longitude, self.temp_unit, self.language, self.weather_request_token)).json()
+
+        weather_list = response.get("list")
+
+        hours = [f"{datetime.datetime.utcfromtimestamp(entry.get('dt')).hour}:00" for entry in weather_list]
+        temperatures = [round(entry.get("main").get("temp")) for entry in weather_list]
+
+        return hours, temperatures
+
+    def create_weather_diagram(self):
+        pyplot.style.use("dark_background")
+        pyplot.rcParams["figure.figsize"] = 4, 2
+
+        x_values, y_values = self.request_forecast()
+
+        figure, axes = pyplot.subplots()
+
+        axes.get_yaxis().set_visible(False)
+        axes.plot(x_values, y_values, linestyle=":", marker=".", color="grey")
+
+        for index, value in enumerate(y_values):
+            axes.annotate(value, (x_values[index], y_values[index]))
+
+        seaborn.despine(left=True, bottom=True, right=True)
+
+        image_data = BytesIO()
+        figure.canvas.print_png(image_data)
+        return image_data.getvalue()
 
 
 class Spotify:
