@@ -66,7 +66,7 @@ class Weather:
 
     def create_weather_diagram(self):
         pyplot.style.use("dark_background")
-        pyplot.rcParams["figure.figsize"] = 4, 2
+        pyplot.rcParams["figure.figsize"] = 5, 2
 
         x_values, y_values = self.request_forecast()
 

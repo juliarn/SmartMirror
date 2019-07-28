@@ -103,7 +103,7 @@ class WeatherFrame(tkinter.Frame):
         self.location_label = MirrorLabel(self, 16)
         self.location_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING)
 
-        self.weather_forecast_image = MirrorImage(self, (400, 200))
+        self.weather_forecast_image = MirrorImage(self, (500, 200))
         self.weather_forecast_image.pack(side="top", anchor="w")
 
     def update(self):
