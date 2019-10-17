@@ -59,7 +59,7 @@ class Weather:
 
         weather_list = response.get("list")
 
-        hours = [f"{datetime.datetime.utcfromtimestamp(entry.get('dt')).hour}:00" for entry in weather_list]
+        hours = ["{}:00".format(datetime.datetime.utcfromtimestamp(entry.get('dt')).hour) for entry in weather_list]
         temperatures = [round(entry.get("main").get("temp")) for entry in weather_list]
 
         return hours, temperatures
@@ -113,7 +113,7 @@ class Spotify:
             if "code" in request.args:
                 code = request.args.get("code")
                 self.auth_token, self.refresh_token = self.request_token(code)
-                return f"Auth-Token: {self.auth_token} <br/> Refresh-Token: {self.refresh_token}"
+                return "Auth-Token: {} <br/> Refresh-Token: {}".format(self.auth_token, self.refresh_token)
             return "Failed to auth!"
 
         if not refresh_token:
@@ -145,7 +145,7 @@ class Spotify:
             self.auth_token, self.expire_millis = self.request_fresh_token(self.refresh_token)
 
         return {
-            "Authorization": f"Bearer {self.auth_token}"
+            "Authorization": "Bearer {}".format(self.auth_token)
         }
 
     def request_current_device(self):

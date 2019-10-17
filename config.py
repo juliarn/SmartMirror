@@ -40,4 +40,4 @@ LESSON_COVERED = "{}. Stunde {} '{}' vertreten von {}"
 LESSON_FREE = "{}. Stunde {} '{}'{}"
 
 COVER_LESSONS_UUID = ""
-COVER_LESSONS_URL = f"URL/{COVER_LESSONS_UUID}.json"
+COVER_LESSONS_URL = "URL/{}.json".format(COVER_LESSONS_UUID)

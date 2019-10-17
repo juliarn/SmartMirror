@@ -68,7 +68,7 @@ class TimeFrame(tkinter.Frame):
         now = datetime.datetime.now()
 
         self.time_label["text"] = now.strftime("%H:%M")
-        self.date_label["text"] = f"{self.weekday_names.get(now.weekday())}, {now.strftime('%d.%m')}"
+        self.date_label["text"] = "{}, {}".format(self.weekday_names.get(now.weekday()), now.strftime('%d.%m'))
 
         self.time_label.after(200, self.update)
 
@@ -109,10 +109,10 @@ class WeatherFrame(tkinter.Frame):
     def update(self):
         temperature, self.weather_status_label["text"], icon_url = self.weather.request_weather()
 
-        self.temperature_label["text"] = f"{temperature}°"
+        self.temperature_label["text"] = "{}°".format(temperature)
         self.weather_status_image.set_data(url=icon_url)
 
-        self.location_label["text"] = f"{self.weather.city}, {self.weather.country}"
+        self.location_label["text"] = "{}, {}".format(self.weather.city, self.weather.country)
 
         self.weather_forecast_image.set_data(data=self.weather.create_weather_diagram())
 
