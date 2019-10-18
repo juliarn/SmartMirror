@@ -1,0 +1,6 @@
+requests
+wifi
+seaborn
+pillow
+matplotlib
+flask

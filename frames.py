@@ -2,8 +2,6 @@ import datetime
 import tkinter
 from io import BytesIO
 
-import cv2
-import numpy
 import requests
 from PIL import ImageTk, Image
 
@@ -29,12 +27,11 @@ class MirrorImage(tkinter.Canvas):
         self.size = size
 
     def parse_image(self, image_data, resize):
+        image = Image.open(BytesIO(image_data))
         if resize:
-            image = numpy.asarray(image_data, dtype="uint8")
-            image = cv2.cvtColor(cv2.imdecode(image, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
-            return Image.fromarray(cv2.resize(image, self.size, interpolation=cv2.INTER_CUBIC))
+            image.thumbnail(self.size, Image.ANTIALIAS)
 
-        return Image.open(BytesIO(image_data))
+        return image;
 
     def set_data(self, url=None, data=None, resize=False):
         image_data = data if data else self.get_image_data(url) if url else None
