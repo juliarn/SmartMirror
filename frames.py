@@ -31,7 +31,7 @@ class MirrorImage(tkinter.Canvas):
         if resize:
             image.thumbnail(self.size, Image.ANTIALIAS)
 
-        return image;
+        return image
 
     def set_data(self, url=None, data=None, resize=False):
         image_data = data if data else self.get_image_data(url) if url else None
@@ -164,8 +164,8 @@ class CoverLessonFrame(tkinter.Frame):
         self.update()
 
     def create_widgets(self):
-        self.head_label = MirrorLabel(self, 18)
-        self.head_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING, pady=(0, config.SIDE_PADDING))
+        self.head_label = MirrorLabel(self, 20)
+        self.head_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING)
 
     def update(self):
         self.cover_lessons.update()
@@ -176,9 +176,12 @@ class CoverLessonFrame(tkinter.Frame):
         for lesson_label in self.lesson_labels:
             lesson_label.destroy()
 
-        for cover_lesson in self.cover_lessons.cover_lessons:
+        cover_lesson_size = len(self.cover_lessons.cover_lessons)
+        for index, cover_lesson in enumerate(self.cover_lessons.cover_lessons):
+            label_y_padding = config.SIDE_PADDING if (index + 1) == cover_lesson_size else 0
+
             lesson_label = MirrorLabel(self, 13)
-            lesson_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING, pady=(0, config.SIDE_PADDING))
+            lesson_label.pack(side="top", anchor="w", padx=config.SIDE_PADDING, pady=(0, label_y_padding))
 
             self.lesson_labels.append(lesson_label)
 
