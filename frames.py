@@ -19,8 +19,12 @@ class MirrorImage(tkinter.Canvas):
 
     @staticmethod
     def get_image_data(url):
-        response = requests.get(url)
-        return bytearray(response.content)
+        try:
+            response = requests.get(url)
+            return bytearray(response.content)
+        except requests.exceptions.ConnectionError as error:
+            print("Error while getting image data!", error)
+            return None
 
     def __init__(self, master, size):
         super().__init__(master, background="black", highlightthickness=0, width=size[0], height=size[1])
@@ -104,14 +108,17 @@ class WeatherFrame(tkinter.Frame):
         self.weather_forecast_image.pack(side="top", anchor="w")
 
     def update(self):
-        temperature, self.weather_status_label["text"], icon_url = self.weather.request_weather()
+        try:
+            temperature, self.weather_status_label["text"], icon_url = self.weather.request_weather()
 
-        self.temperature_label["text"] = "{}°".format(temperature)
-        self.weather_status_image.set_data(url=icon_url)
+            self.temperature_label["text"] = "{}°".format(temperature)
+            self.weather_status_image.set_data(url=icon_url)
 
-        self.location_label["text"] = "{}, {}".format(self.weather.city, self.weather.country)
+            self.location_label["text"] = "{}, {}".format(self.weather.city, self.weather.country)
 
-        self.weather_forecast_image.set_data(data=self.weather.create_weather_diagram())
+            self.weather_forecast_image.set_data(data=self.weather.create_weather_diagram())
+        except requests.exceptions.ConnectionError as error:
+            print("Failed to fetch data from OpenWeatherMap!", error)
 
         self.temperature_label.after(1000 * 60 * 10, self.update)
 
@@ -143,11 +150,14 @@ class SpotifyFrame(tkinter.Frame):
         self.artist_label.pack(side="top", anchor="e", padx=config.SIDE_PADDING, pady=(0, config.SIDE_PADDING))
 
     def update(self):
-        current_device = self.spotify.request_current_device()
-        self.device_label["text"] = config.SPOTIFY_DEVICE_LABEL.format(current_device) if current_device else ""
+        try:
+            current_device = self.spotify.request_current_device()
+            self.device_label["text"] = config.SPOTIFY_DEVICE_LABEL.format(current_device) if current_device else ""
 
-        self.song_label["text"], self.artist_label["text"], cover_image_url = self.spotify.request_current_song()
-        self.cover_image.set_data(url=cover_image_url, resize=True)
+            self.song_label["text"], self.artist_label["text"], cover_image_url = self.spotify.request_current_song()
+            self.cover_image.set_data(url=cover_image_url, resize=True)
+        except requests.exceptions.ConnectionError as error:
+            print("Failed to fetch data from Spotify!", error)
 
         self.song_label.after(1000, self.update)
 

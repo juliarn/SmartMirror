@@ -24,6 +24,13 @@ class Weather:
 
         self.country, self.latitude, self.longitude = self.request_location()
 
+        pyplot.style.use("dark_background")
+        pyplot.rcParams["figure.figsize"] = 5, 2
+
+        self.figure, self.axes = pyplot.subplots()
+
+        self.axes.get_yaxis().set_visible(False)
+
     def request_location(self):
         wifi_addresses = [cell.address for cell in wifi.Cell.all("wlan0")] if not self.wifi_addresses else self.wifi_addresses
 
@@ -65,23 +72,18 @@ class Weather:
         return hours, temperatures
 
     def create_weather_diagram(self):
-        pyplot.style.use("dark_background")
-        pyplot.rcParams["figure.figsize"] = 5, 2
+        self.axes.clear()
 
         x_values, y_values = self.request_forecast()
-
-        figure, axes = pyplot.subplots()
-
-        axes.get_yaxis().set_visible(False)
-        axes.plot(x_values, y_values, linestyle=":", marker=".", color="grey")
+        self.axes.plot(x_values, y_values, linestyle=":", marker=".", color="grey")
 
         for index, value in enumerate(y_values):
-            axes.annotate(value, (x_values[index], y_values[index]))
+            self.axes.annotate(value, (x_values[index], y_values[index]))
 
         seaborn.despine(left=True, bottom=True, right=True)
 
         image_data = BytesIO()
-        figure.canvas.print_png(image_data)
+        self.figure.canvas.print_png(image_data)
         return image_data.getvalue()
 
 
